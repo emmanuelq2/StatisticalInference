@@ -3,9 +3,9 @@
 
 This assignment has two parts:
 - investigate exponential distribution in R and compare it with the Central Limit Theorem
-- analyze the ToothGrowth data in the R datasets packag
+- analyze the ToothGrowth data in the R datasets package
 
-1. In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem. 
+1. In this project you will investigate the exponential distribution in R and compare it with the Central Limit Theorem.
 The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. 
 The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. Set lambda = 0.2 for all of the simulations. 
 You will investigate the distribution of averages of 40 exponentials. Note that you will need to do a thousand simulations.
@@ -30,7 +30,6 @@ hist(mns)
 
 This distribution looks far more Gaussian than the original uniform distribution!
 This exercise is asking you to use your knowledge of the theory given in class to relate the two distributions. 
-
 
 
 2. Now in the second portion of the class, we're going to analyze the ToothGrowth data in the R datasets package.
