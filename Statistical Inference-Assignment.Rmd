@@ -1,0 +1,91 @@
+---
+title: "EXPONENTIAL DISTRIBUTION vs NORMAL DISTRIBUTION"
+author: "emmanuelq2"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  pdf_document:
+    highlight: espresso
+---
+
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+Sys.setlocale("LC_TIME", "English")
+```
+
+The underlying idea of this project is to investigate the exponential distribution and compare it with the Central limit Theorem (CLT). The exponential distribution can be simulated in R with rexp(n, lambda) where lambda($\lambda$) is the rate parameter. The mean of exponential distribution is $1/\lambda$ and the standard deviation is also $1/\lambda$. For this simulation, we set $\lambda=0.2$. In this simulation, we observe the distribution of averages of 40 exponentials. We will perform a thousand simulations.
+
+<span style="color:blue">SIMULATION</span>
+------------
+
+```{r, results='asis', echo=TRUE, cache=TRUE}
+# Set seed for reproducibility 
+set.seed(123)
+lambda <- 0.2
+# We perform 1000 simulations with 40 samples 
+sample <- 40
+simulations <- 1:1000
+
+# Let's do 1000 simulations
+means <- data.frame(x = sapply(simulations, function(x) {mean(rexp(sample, lambda))}))
+# Averages of 40 exponentials
+avgfirst <- head(means)
+knitr::kable(t(head(avgfirst)))
+```
+
+<span style="color:blue">RESULTS</span>
+-------------
+
+1. Show the sample mean and compare it to the theoretical mean of the distribution.
+
+```{r, echo=TRUE, cache=TRUE}
+# mean of distribution of averages of 40 exponentials
+sample_mean <- mean(means$x)
+# expected mean from analytical expression
+expected_mean <- 1/lambda
+
+```
+
+The mean of the means of the exponential of 1000 simulations of 40 exponentials is `r round(sample_mean, 4)`, which is very close to the expected mean of $\lambda^{-1}$ = `r expected_mean`.
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(ggplot2)
+```
+
+```{r, echo=TRUE, cache=TRUE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6}
+ggplot(data = means, aes(x = means)) + 
+    geom_histogram(aes(y=..density..), fill = I('#E9A3C9'), 
+                   binwidth = 0.20, color = I('black')) +
+    stat_function(fun = dnorm, arg = list(mean = 5, sd = sd(means$x))) +
+     ggtitle("Distribution of averages of samples drawn from exponential distribution") +theme(plot.title = element_text(lineheight=1,  face="bold")) + geom_vline(xintercept = 5, col="blue", size=1)
+```
+
+Above is displayed a histogram of the means of the 1000 simulations of rexp(n, lambda). It is overlaid with a normal distribution with mean 5 and standard deviation 0.7909. So, the distribution of our simulations appears to be normal.
+
+2. Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution
+
+```{r, echo=TRUE, cache=TRUE}
+# Variance of our simulations:
+sample_var <- var(means$x)
+# Expected variance of the distribution
+expected_var <- ((1/lambda)/sqrt(sample))^2
+
+# standard deviation of distribution of averages of 40 exponentials
+sample_sd <- sd(means$x)
+# Expected standard deviation
+expected_sd <- (1/lambda)/sqrt(sample)
+```
+
+The variance of sample means is `r sprintf("%.4f", sample_var)` whereas the theoretical variance of the distribution is $\sigma^2 / n = 1/(\lambda^2 n) = 1/(0.04 \times 40)$ = `r sprintf("%.4f", expected_var)`.
+
+Similarly, the standard deviation in distribution of averages of 40 exponentials equates to `r sample_sd` is close to the theoretical standard deviation of the distribution, `r sprintf("%.4f", expected_sd)`. 
+
+
+3. Show that the distribution is approximately normal
+
+```{r, echo=TRUE, cache=TRUE, fig.width=9, fig.height=6}
+qqnorm(means$x, col="blue")
+qqline(means$x, col = "red")
+```
+
+Due to the Central Limit Theorem, the averages of samples follow normal distribution. The figure above also shows the density computed using the histogram and the normal density plotted with theoretical mean and variance values. Also, the q-q plot suggests the distribution of averages of 40 exponentials is very close to a normal distribution
+

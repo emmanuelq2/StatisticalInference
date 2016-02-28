@@ -1,0 +1,130 @@
+---
+title: "Inferences on the Effect of Vitamin C on Tooth Growth"
+author: "emmanuelq2"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document:
+    highlight: zenburn
+---
+
+```{r, results='hide', message=FALSE, warning=FALSE}
+Sys.setlocale("LC_TIME", "English")
+```
+
+This analyzis relates to ["The Effect of Vitamin C on Tooth Growth in Guinea Pigs"](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/ToothGrowth.html).
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice - coded as OJ - or ascorbic acid (a form of vitamin C and coded as VC)). 
+To compare differences of two means, we must **check three conditions**:
+- first, the guinea pigs were independent from each other
+- secondly, the sheep in each group (by level of dosage or by type of delivery method) were also independent of each other
+- randomized treatment should have been performed
+
+
+1. LOADING DATA AND BASIC EXPLORATORY DATA ANALYZIS
+----------------------------------------------------
+
+```{r, echo=TRUE, cache=TRUE, resuls='asis'}
+data("ToothGrowth")
+# head(ToothGrowth)
+# str(ToothGrowth)
+knitr::kable(head(ToothGrowth))
+```
+
+Since the dataset includes only three dose levels of Vitamin C (0.5, 1, and 2 mg), it seems relevant for the purposes of this analysis to convert the dose variable into a factor.
+
+```{r, echo=TRUE, cache=TRUE}
+ToothGrowth$dose <- factor(ToothGrowth$dose, labels=c("0.5mg", "1mg", "2mg"))
+```
+
+
+2. BASIC SUMMARY
+---------------
+
+```{r, echo=TRUE, cache=TRUE}
+# basic summary statistics
+summary(ToothGrowth)
+# knitr::kable(summary(ToothGrowth))
+
+# summary statistics within each combination of dose method and delivery level
+by(ToothGrowth$len, INDICES = list(ToothGrowth$supp, ToothGrowth$dose), summary)
+```
+
+```{r, echo=TRUE, cache=TRUE, fig.width=9, fig.height=6}
+boxplot(len ~ supp * dose, data=ToothGrowth, xlab = 'Delivery method and dose amount', ylab= 'Cells length', main = 'Boxplot of Tooth Growth Data by Dose Level and Type of Delivery Method', col=c('darkblue', 'red'))
+```
+
+Box plot figure clearly shows that on average the length of odontoblasts (cells responsible for tooth growth) increases as the dose level grows. Therefore, we can observe a positive correlation between these two factors. On the other hand, it is not clear whether there is any correlation between the cells length and the type of delivery method (orange juice-OJ vs supplement-VC). Next we will use confidence intervals and hypothesis tests to compare tooth growth (or rather, cells length) by delivery method and dosage level.
+
+3. COMPARING TOOTH GROWTH BY SUPP AND DOSE WITH CONFIDENCE INTERVALS AND/OR HYPOTESIS TESTS 
+-------------------------------------------------------------------------------------------
+
+- Checking for correlation between the delivery method and change in tooth growth (length of odontoblasts)
+
+```{r, echo=TRUE, cache=TRUE, results='hide', message=FALSE, warning=FALSE}
+library(dplyr)
+```
+
+```{r, echo=TRUE, cache=TRUE}
+t.test(len ~ supp, paired = F, var.equal = F, data = ToothGrowth)
+```
+A confidence interval of [-0.171, 7.571] does not allow us to reject the null hypothesis since the interval includes 0. However, the p-value is slightly higher than .05. 
+
+- Checking the data for correlation between dose level and change in tooth growth within each dose level group
+
+```{r, echo=TRUE, cache=TRUE}
+dose1 <- filter(ToothGrowth, dose == "0.5mg")
+dose2 <- filter(ToothGrowth, dose == "1mg")
+dose3 <- filter(ToothGrowth, dose == "2mg")
+```
+
+```{r, echo=TRUE, cache=TRUE}
+t.test(len ~ supp, paired = F, var.equal = F, data = dose1)
+```
+
+```{r, echo=TRUE, cache=TRUE}
+t.test(len ~ supp, paired = F, var.equal = F, data = dose2)
+```
+
+```{r, echo=TRUE, cache=TRUE}
+t.test(len ~ supp, paired = F, var.equal = F, data = dose3)
+```
+The confidence intervals for dose levels 0.5mg ([1.72, 8,78] and 1mg [2.80, 9.06]) allow us to  reject the null hypothesis. Furthermore, the p-value for these two categories is very low.
+However, the confidence interval for dose level 2.0 ([-3.80, 3.64]) would not permit us to reject the null hypothesis. Therefore, regarding this criteria, we can not reject the null hypotesis and shall consider that there are no correlations between dose level and change in length of odontoblasts.
+
+- Checking for correlation between the dose level and change in tooth growth
+
+Since there are three levels of dosage, we need to perform three tests (one vs another: comparing data for dose 0.5mg vs dose 1mg, fordose 0.5mg vs dose 2mg and lastly for dose 1mg vs dose 2mg). 
+
+```{r, echo=TRUE, cache=TRUE}
+complevel1 <- filter(ToothGrowth, dose=="0.5mg"|dose=="1mg")
+complevel2 <- filter(ToothGrowth, dose=="0.5mg"|dose=="2mg")
+complevel3 <- filter(ToothGrowth, dose=="1mg"|dose=="2mg")
+tapply(ToothGrowth$len, ToothGrowth$dose, mean)
+# comparing data for dose 0.5mg vs dose 1mg
+t.test(len ~ dose, paired = F, var.equal = F, data = complevel1)
+diff1 <- 10.605-19.735
+```
+
+The difference between the two means for the two groups equates to `r diff1`. The confidence interval for this difference ranges from [-11.983: -6.276]. So, there is a clear difference between the two groups and we are likely to reject the null hypotesis. Forthermore, the p-value is very low and less than .05.
+
+```{r, echo=TRUE, cache=TRUE}
+# comparing data for dose 0.5mg vs dose 2mg
+t.test(len ~ dose, paired = F, var.equal = F, data = complevel2)
+diff2 <- 10.605-26.1
+```
+
+The difference between the two means for the two groups equates to `r diff2`. The confidence interval for this difference ranges from [-18.156: -12.833]. So, there is a clear difference between the two groups and we are likely to reject the null hypotesis. Forthermore, the p-value is very low and much less than .05.
+
+```{r, echo=TRUE, cache=TRUE}
+# comparing data for dose 1mg vs dose 2mg
+t.test(len ~ dose, paired = F, var.equal = F, data = complevel3)
+diff3 <- 19.735-26.1
+```
+The difference between the two means for the two groups equates to `r diff3`. The confidence interval for this difference ranges from [-8.996: -3.733]. So, there is a clear difference between the two groups and we are likely to reject the null hypotesis. Forthermore, the p-value is very low and much less than .05.
+
+
+4. CONCLUSION
+-----------------
+There is a **significant correlation between the dose level and change in tooth growth** (or, more exactly, on length of odontoblasts). A higher dose level consistently yields longer teeth.
+
+When checking the data for correlation between dose level and change in tooth growth within each dose level group, we can observe some correlations for dose levels 0.5mg and 1mg, but not 2mg. 
+It means that increasing in dosage for both delivery methods has a positive correlation with tooth growth but to a lesser extent for 2mg. 
